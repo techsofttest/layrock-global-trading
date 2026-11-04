@@ -68,7 +68,7 @@ export const CATEGORIES: Category[] = [
     short: "Non-ferrous metals",
     count: "Alloys & metals",
     image:
-      "/categories/Metal products.png",
+      "/categories/Metal Products.png",
   },
   {
     name: "Plastics (HDPE & Others)",
@@ -722,7 +722,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     description:
       "Dependable metal, structural steel, rebar, beams, and stainless steel pipe sourcing for industrial infrastructure.",
     image:
-      "/home-hero/Metal products & Structural Steel.png",
+      "/home-hero/Metal Products & Structural Steel.png",
     label: "Category: Non-ferrous metals",
   },
   {

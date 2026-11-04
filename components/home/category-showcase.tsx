@@ -25,7 +25,7 @@ interface CategoryRowProps {
 // Map category names to widescreen images in public/home-hero for mobile & tablet screens
 const MOBILE_TAB_HERO_IMAGES: Record<string, string> = {
   "Aluminium Products & Extrusions": "/home-hero/Aluminium Products & Extrusions.png",
-  "Non-ferrous metals": "/home-hero/Metal products & Structural Steel.png",
+  "Non-ferrous metals": "/home-hero/Metal Products & Structural Steel.png",
   "Plastics (HDPE & Others)": "/home-hero/Plastics HDPE & Other Polymers.png",
   "AAC Blocks": "/home-hero/Autoclaved Aerated Concrete AAC Blocks.png",
   "Spices": "/home-hero/Premium Export Spices.png",
