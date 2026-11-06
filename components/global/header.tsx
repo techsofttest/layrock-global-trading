@@ -11,13 +11,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, ArrowUpRight, Layers3, Mail, MapPin, Menu, Phone, Search, X } from "lucide-react";
-import type { Category, Product } from "@/components/data/site-data";
-import { CATEGORIES, PRODUCTS, EMAIL_ADDRESS, PHONE_NUMBER } from "@/components/data/site-data";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Layers3,
+  Mail,
+  MapPin,
+  Menu,
+  Phone,
+  Search,
+  X,
+} from "lucide-react";
+
+import type { Category } from "@/lib/category";
+import type { ContactDetails } from "@/lib/contact";
+
 import { SearchDropdown } from "@/components/global/search-dropdown";
 
 export interface HeaderProps {
   categories?: Category[];
+  contact?: ContactDetails | null;
   activeCategory?: string;
   query?: string;
   mobileMenuOpen?: boolean;
@@ -29,7 +42,8 @@ export interface HeaderProps {
 }
 
 export function Header({
-  categories = CATEGORIES,
+  categories = [],
+  contact = null,
   activeCategory: propActiveCategory,
   query: propQuery,
   mobileMenuOpen: propMobileMenuOpen,
@@ -44,11 +58,15 @@ export function Header({
   // Search and dropdown state
   const [internalQuery, setInternalQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   const isDropdownOpenRef = useRef(false);
   isDropdownOpenRef.current = isDropdownOpen;
+
   const isSearchFocusedRef = useRef(false);
+
   const [internalMobileMenuOpen, setInternalMobileMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+
   const lastScrollY = useRef(0);
   const savedScrollYRef = useRef(0);
 
@@ -56,7 +74,11 @@ export function Header({
   const mobileSearchRef = useRef<HTMLDivElement>(null);
 
   const query = propQuery !== undefined ? propQuery : internalQuery;
-  const mobileMenuOpen = propMobileMenuOpen !== undefined ? propMobileMenuOpen : internalMobileMenuOpen;
+
+  const mobileMenuOpen =
+    propMobileMenuOpen !== undefined
+      ? propMobileMenuOpen
+      : internalMobileMenuOpen;
 
   // Header scroll auto-hide
   useEffect(() => {
@@ -82,15 +104,20 @@ export function Header({
     }
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, [mobileMenuOpen]);
 
   // Close search dropdown on scroll or outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       const target = e.target as Node;
+
       if (
-        (!desktopSearchRef.current || !desktopSearchRef.current.contains(target)) &&
+        (!desktopSearchRef.current ||
+          !desktopSearchRef.current.contains(target)) &&
         (!mobileSearchRef.current || !mobileSearchRef.current.contains(target))
       ) {
         setIsDropdownOpen(false);
@@ -98,38 +125,46 @@ export function Header({
     }
 
     function handleWindowScroll() {
-      // Ignore scroll events triggered by virtual keyboard popping up on mobile
       if (isSearchFocusedRef.current) return;
+
       setIsDropdownOpen(false);
     }
 
     document.addEventListener("mousedown", handleClickOutside);
-    window.addEventListener("scroll", handleWindowScroll, { passive: true });
+
+    window.addEventListener("scroll", handleWindowScroll, {
+      passive: true,
+    });
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("scroll", handleWindowScroll);
     };
   }, []);
 
-  // Lock body scroll while mobile search input is focused to prevent auto-scroll
+  // Lock body scroll while mobile search input is focused
   useEffect(() => {
     function lockBodyScroll() {
       if (window.innerWidth >= 768) return;
+
       savedScrollYRef.current = window.scrollY;
-      document.body.style.position = 'fixed';
+
+      document.body.style.position = "fixed";
       document.body.style.top = `-${savedScrollYRef.current}px`;
-      document.body.style.left = '0';
-      document.body.style.right = '0';
-      document.body.style.overflow = 'hidden';
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.overflow = "hidden";
     }
 
     function unlockBodyScroll() {
-      if (document.body.style.position !== 'fixed') return;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.overflow = '';
+      if (document.body.style.position !== "fixed") return;
+
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.overflow = "";
+
       window.scrollTo(0, savedScrollYRef.current);
     }
 
@@ -138,6 +173,7 @@ export function Header({
 
     return () => {
       unlockBodyScroll();
+
       delete window.__layrockLockScroll;
       delete window.__layrockUnlockScroll;
     };
@@ -154,6 +190,7 @@ export function Header({
     } else {
       setInternalQuery(val);
     }
+
     if (val.trim().length > 0) {
       setIsDropdownOpen(true);
     } else {
@@ -163,7 +200,9 @@ export function Header({
 
   function handleSearch(event?: React.FormEvent<HTMLFormElement>) {
     if (event) event.preventDefault();
+
     setIsDropdownOpen(false);
+
     if (onSearchSubmit && event) {
       onSearchSubmit(event);
     } else {
@@ -175,11 +214,11 @@ export function Header({
     }
   }
 
-  function handleCategoryClick(catName: string) {
+  function handleCategoryClick(categorySlug: string) {
     if (onSelectCategory) {
-      onSelectCategory(catName);
+      onSelectCategory(categorySlug);
     } else {
-      router.push(`/products?category=${encodeURIComponent(catName)}`);
+      router.push(`/products?category=${encodeURIComponent(categorySlug)}`);
     }
   }
 
@@ -199,17 +238,30 @@ export function Header({
     }
   }
 
-  // Filter top 6 matching products for live dropdown suggestion
-  const searchResults: Product[] = useMemo(() => {
+  // Dynamic product search using Laravel API data
+  const searchResults = useMemo(() => {
     const q = query.trim().toLowerCase();
+
     if (!q) return [];
-    return PRODUCTS.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q)
-    ).slice(0, 6);
-  }, [query]);
+
+    return categories
+      .flatMap((category) =>
+        (category.products ?? []).map((product) => ({
+          ...product,
+          categoryName: category.name,
+        })),
+      )
+      .filter(
+        (product) =>
+          product.name?.toLowerCase().includes(q) ||
+          product.description?.toLowerCase().includes(q) ||
+          product.categoryName?.toLowerCase().includes(q) ||
+          product.specification?.spec?.toLowerCase().includes(q) ||
+          product.specification?.origin?.toLowerCase().includes(q) ||
+          product.specification?.packing?.toLowerCase().includes(q),
+      )
+      .slice(0, 6);
+  }, [categories, query]);
 
   return (
     <>
@@ -235,47 +287,61 @@ export function Header({
               />
             </Link>
 
-            {/* Desktop & Tablet Search Bar (shown from md up) */}
-            <div ref={desktopSearchRef} className="relative hidden flex-1 md:block max-w-xl">
+            {/* Desktop & Tablet Search Bar */}
+            <div
+              ref={desktopSearchRef}
+              className="relative hidden max-w-xl flex-1 md:block"
+            >
               <form
                 onSubmit={handleSearch}
                 role="search"
                 aria-label="Search all products"
               >
-                <label className="relative flex h-10 lg:h-11 items-center overflow-hidden rounded-xl border border-black/15 bg-white transition focus-within:border-[#ff0000] focus-within:ring-2 focus-within:ring-[#ff0000]/10">
-                  <Search size={17} className="ml-3.5 shrink-0 text-[#404040]" />
+                <label className="relative flex h-10 items-center overflow-hidden rounded-xl border border-black/15 bg-white transition focus-within:border-[#ff0000] focus-within:ring-2 focus-within:ring-[#ff0000]/10 lg:h-11">
+                  <Search
+                    size={17}
+                    className="ml-3.5 shrink-0 text-[#404040]"
+                  />
+
                   <input
                     type="search"
                     value={query}
                     onChange={(event) => handleQueryChange(event.target.value)}
                     onFocus={() => {
                       isSearchFocusedRef.current = true;
-                      if (query.trim()) setIsDropdownOpen(true);
+
+                      if (query.trim()) {
+                        setIsDropdownOpen(true);
+                      }
                     }}
                     onBlur={() => {
                       isSearchFocusedRef.current = false;
                     }}
                     onClick={() => {
-                      if (query.trim()) setIsDropdownOpen(true);
+                      if (query.trim()) {
+                        setIsDropdownOpen(true);
+                      }
                     }}
                     placeholder="Search products, materials, polymers, spices..."
                     aria-label="Search products"
-                    className="size-full bg-transparent px-3 text-[13.5px] lg:text-[14px] text-[#171717] outline-none placeholder:text-[#595959]"
+                    className="size-full bg-transparent px-3 text-[13.5px] text-[#171717] outline-none placeholder:text-[#595959] lg:text-[14px]"
                   />
+
                   {query.trim() && (
                     <button
                       type="button"
                       onClick={handleClearQuery}
                       aria-label="Clear search input"
-                      className="mr-2 flex size-6 shrink-0 items-center justify-center rounded-full text-[#888] transition hover:bg-black/5 hover:text-[#171717] cursor-pointer"
+                      className="mr-2 flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#888] transition hover:bg-black/5 hover:text-[#171717]"
                     >
                       <X size={15} />
                     </button>
                   )}
+
                   <button
                     type="submit"
                     aria-label="Submit product search"
-                    className="flex h-full items-center justify-center rounded-r-xl bg-[#ff0000] px-3.5 lg:px-4 text-white transition hover:bg-[#d90000] cursor-pointer"
+                    className="flex h-full cursor-pointer items-center justify-center rounded-r-xl bg-[#ff0000] px-3.5 text-white transition hover:bg-[#d90000] lg:px-4"
                   >
                     <ArrowRight size={16} />
                   </button>
@@ -295,7 +361,7 @@ export function Header({
             {/* Desktop Navigation Links */}
             <nav
               aria-label="Main navigation"
-              className="hidden items-center gap-5 xl:gap-7 lg:flex"
+              className="hidden items-center gap-5 lg:flex xl:gap-7"
             >
               {[
                 ["About us", "/about"],
@@ -306,7 +372,7 @@ export function Header({
                 <Link
                   key={href}
                   href={href}
-                  className="text-[13.5px] xl:text-[14px] font-medium text-[#171717] transition hover:text-[#ff0000] whitespace-nowrap"
+                  className="whitespace-nowrap text-[13.5px] font-medium text-[#171717] transition hover:text-[#ff0000] xl:text-[14px]"
                 >
                   {label}
                 </Link>
@@ -317,7 +383,7 @@ export function Header({
             <div className="flex items-center gap-2 sm:gap-2.5">
               <Link
                 href="/contact"
-                className="inline-flex h-9 sm:h-11 items-center gap-1.5 sm:gap-2 rounded-lg bg-[#ff0000] px-3 sm:px-4 text-[12px] sm:text-[13px] font-semibold text-white shadow-xs transition hover:bg-[#d90000] whitespace-nowrap"
+                className="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#ff0000] px-3 text-[12px] font-semibold text-white shadow-xs transition hover:bg-[#d90000] sm:h-11 sm:gap-2 sm:px-4 sm:text-[13px]"
               >
                 <span>Request quote</span>
                 <ArrowUpRight size={15} />
@@ -325,18 +391,25 @@ export function Header({
 
               <button
                 type="button"
-                aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+                aria-label={
+                  mobileMenuOpen
+                    ? "Close navigation menu"
+                    : "Open navigation menu"
+                }
                 aria-expanded={mobileMenuOpen}
                 onClick={toggleMenu}
-                className="flex size-9 sm:size-11 items-center justify-center rounded-lg border border-black/10 bg-white text-[#171717] transition hover:bg-[#f4f5f7] lg:hidden cursor-pointer"
+                className="flex size-9 cursor-pointer items-center justify-center rounded-lg border border-black/10 bg-white text-[#171717] transition hover:bg-[#f4f5f7] sm:size-11 lg:hidden"
               >
                 {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
               </button>
             </div>
           </div>
 
-          {/* Mobile & Small Screen Search Bar (visible on < md) */}
-          <div ref={mobileSearchRef} className="relative pb-2.5 pt-0.5 md:hidden">
+          {/* Mobile & Small Screen Search Bar */}
+          <div
+            ref={mobileSearchRef}
+            className="relative pb-2.5 pt-0.5 md:hidden"
+          >
             <form
               onSubmit={handleSearch}
               role="search"
@@ -344,13 +417,18 @@ export function Header({
             >
               <label className="relative flex h-10 items-center overflow-hidden rounded-xl border border-black/15 bg-white focus-within:border-[#ff0000] focus-within:ring-2 focus-within:ring-[#ff0000]/10">
                 <Search size={16} className="ml-3 shrink-0 text-[#404040]" />
+
                 <input
                   type="search"
                   value={query}
                   onChange={(event) => handleQueryChange(event.target.value)}
                   onFocus={() => {
                     isSearchFocusedRef.current = true;
-                    if (query.trim()) setIsDropdownOpen(true);
+
+                    if (query.trim()) {
+                      setIsDropdownOpen(true);
+                    }
+
                     window.__layrockLockScroll?.();
                   }}
                   onBlur={() => {
@@ -358,26 +436,30 @@ export function Header({
                     window.__layrockUnlockScroll?.();
                   }}
                   onClick={() => {
-                    if (query.trim()) setIsDropdownOpen(true);
+                    if (query.trim()) {
+                      setIsDropdownOpen(true);
+                    }
                   }}
                   placeholder="Search products..."
                   aria-label="Search products"
                   className="size-full bg-transparent px-3 text-[13px] text-[#171717] outline-none"
                 />
+
                 {query.trim() && (
                   <button
                     type="button"
                     onClick={handleClearQuery}
                     aria-label="Clear mobile search input"
-                    className="mr-1.5 flex size-6 shrink-0 items-center justify-center rounded-full text-[#888] transition hover:bg-black/5 hover:text-[#171717] cursor-pointer"
+                    className="mr-1.5 flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#888] transition hover:bg-black/5 hover:text-[#171717]"
                   >
                     <X size={14} />
                   </button>
                 )}
+
                 <button
                   aria-label="Submit search"
                   type="submit"
-                  className="flex h-full items-center justify-center rounded-r-xl bg-[#ff0000] px-3.5 text-white cursor-pointer"
+                  className="flex h-full cursor-pointer items-center justify-center rounded-r-xl bg-[#ff0000] px-3.5 text-white"
                 >
                   <ArrowRight size={16} />
                 </button>
@@ -395,31 +477,33 @@ export function Header({
           </div>
         </div>
 
-        {/* Category Bar with Smooth Horizontal Touch Scrolling */}
+        {/* Dynamic Category Bar - Maximum 5 Categories */}
         <div className="border-t border-black/[0.06] bg-[#faf9f7]">
           <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3 px-3 sm:px-6 lg:px-10">
             <nav
               aria-label="Product categories"
               className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
-              <span className="mr-2 flex shrink-0 items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-[#404040]">
-                <Layers3 size={13} className="shrink-0" /> Categories:
+              <span className="mr-2 flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-[#404040] sm:text-xs">
+                <Layers3 size={13} className="shrink-0" />
+                Categories:
               </span>
-              {categories.slice(1).map((category) => (
+
+              {categories.slice(0, 5).map((category) => (
                 <button
-                  key={category.name}
+                  key={category.id}
                   type="button"
-                  onClick={() => handleCategoryClick(category.name)}
-                  className="shrink-0 whitespace-nowrap px-2 py-0.5 text-left text-[11px] sm:text-[11.5px] font-medium text-[#2d2d2d] transition hover:text-[#ff0000] hover:decoration-[#ff0000] cursor-pointer"
+                  onClick={() => handleCategoryClick(category.slug)}
+                  className="shrink-0 cursor-pointer whitespace-nowrap px-2 py-0.5 text-left text-[11px] font-medium text-[#2d2d2d] transition hover:text-[#ff0000] sm:text-[11.5px]"
                 >
-                  {category.short || category.name}
+                  {category.name}
                 </button>
               ))}
             </nav>
 
             <Link
               href="/products"
-              className="shrink-0 text-[11px] sm:text-[11.5px] font-semibold text-[#ff0000] underline decoration-[#ff0000]/40 underline-offset-4 transition hover:text-[#d90000] hover:decoration-[#d90000]"
+              className="shrink-0 text-[11px] font-semibold text-[#ff0000] underline decoration-[#ff0000]/40 underline-offset-4 transition hover:text-[#d90000] hover:decoration-[#d90000] sm:text-[11.5px]"
             >
               View all
             </Link>
@@ -427,10 +511,12 @@ export function Header({
         </div>
       </header>
 
-      {/* ── Mobile & Tablet Left Slide-in Drawer ── */}
+      {/* Mobile & Tablet Left Slide-in Drawer */}
       <div
         className={`fixed inset-0 z-50 transition-opacity duration-300 lg:hidden ${
-          mobileMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+          mobileMenuOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
         }`}
       >
         {/* Dark Backdrop */}
@@ -446,8 +532,8 @@ export function Header({
             mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          {/* Drawer Header with Logo & Close Button */}
-          <div className="flex h-16 sm:h-20 shrink-0 items-center justify-between border-b border-black/[0.08] px-5 sm:px-6">
+          {/* Drawer Header */}
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-black/[0.08] px-5 sm:h-20 sm:px-6">
             <Link href="/" onClick={closeMenu} className="flex items-center">
               <Image
                 src="/logo/logo.svg"
@@ -457,23 +543,28 @@ export function Header({
                 className="h-8 w-auto object-contain sm:h-9"
               />
             </Link>
+
             <button
               type="button"
               onClick={closeMenu}
               aria-label="Close navigation drawer"
-              className="flex size-9 items-center justify-center rounded-lg border border-black/10 bg-white text-[#171717] transition hover:bg-[#f4f5f7] cursor-pointer"
+              className="flex size-9 cursor-pointer items-center justify-center rounded-lg border border-black/10 bg-white text-[#171717] transition hover:bg-[#f4f5f7]"
             >
               <X size={18} />
             </button>
           </div>
 
-          {/* Scrollable Body: Navigation Links + Contact Details */}
+          {/* Scrollable Drawer Body */}
           <div className="flex-1 overflow-y-auto px-4 py-5 [scrollbar-width:thin]">
             {/* Navigation Links */}
-            <nav aria-label="Mobile and tablet drawer navigation" className="space-y-1">
+            <nav
+              aria-label="Mobile and tablet drawer navigation"
+              className="space-y-1"
+            >
               <span className="block px-3.5 pb-1 text-[11px] font-bold uppercase tracking-wider text-[#737373]">
                 Menu
               </span>
+
               {[
                 ["About us", "/about"],
                 ["Products & Services", "/products"],
@@ -491,7 +582,7 @@ export function Header({
               ))}
             </nav>
 
-            {/* Contact Details Section inside Drawer */}
+            {/* Dynamic Contact Details */}
             <div className="mt-6 border-t border-black/[0.08] pt-5">
               <span className="block px-3.5 pb-2 text-[11px] font-bold uppercase tracking-wider text-[#737373]">
                 Contact Layrock
@@ -500,33 +591,43 @@ export function Header({
               <div className="space-y-3 px-3.5 text-[13px] text-[#404040]">
                 {/* Office Address */}
                 <div className="flex items-start gap-2.5">
-                  <MapPin size={15} className="mt-0.5 shrink-0 text-[#ff0000]" />
-                  <p className="leading-snug">
-                    79 Hurn Lane, Keynsham,<br />Bristol BS31 1QY, UK
+                  <MapPin
+                    size={15}
+                    className="mt-0.5 shrink-0 text-[#ff0000]"
+                  />
+
+                  <p className="whitespace-pre-line leading-snug">
+                    {contact?.address || "Address unavailable"}
                   </p>
                 </div>
 
                 {/* Email */}
-                <div className="flex items-center gap-2.5">
-                  <Mail size={15} className="shrink-0 text-[#ff0000]" />
-                  <a
-                    href={`mailto:${EMAIL_ADDRESS}`}
-                    className="truncate font-medium text-[#171717] hover:text-[#ff0000]"
-                  >
-                    {EMAIL_ADDRESS}
-                  </a>
-                </div>
+                {contact?.email && (
+                  <div className="flex items-center gap-2.5">
+                    <Mail size={15} className="shrink-0 text-[#ff0000]" />
+
+                    <a
+                      href={`mailto:${contact.email}`}
+                      className="truncate font-medium text-[#171717] hover:text-[#ff0000]"
+                    >
+                      {contact.email}
+                    </a>
+                  </div>
+                )}
 
                 {/* Phone */}
-                <div className="flex items-center gap-2.5">
-                  <Phone size={15} className="shrink-0 text-[#ff0000]" />
-                  <a
-                    href={`tel:${PHONE_NUMBER.replace(/\s+/g, "")}`}
-                    className="font-medium text-[#171717] hover:text-[#ff0000]"
-                  >
-                    {PHONE_NUMBER}
-                  </a>
-                </div>
+                {contact?.phone && (
+                  <div className="flex items-center gap-2.5">
+                    <Phone size={15} className="shrink-0 text-[#ff0000]" />
+
+                    <a
+                      href={`tel:${contact.phone.replace(/\s+/g, "")}`}
+                      className="font-medium text-[#171717] hover:text-[#ff0000]"
+                    >
+                      {contact.phone}
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           </div>

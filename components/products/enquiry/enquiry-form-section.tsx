@@ -1,16 +1,23 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { getCountries, getCountryCallingCode, type Country } from "react-phone-number-input";
+import {
+  getCountries,
+  getCountryCallingCode,
+  type Country,
+} from "react-phone-number-input";
 import en from "react-phone-number-input/locale/en.json";
 
-import type { Product } from "@/components/data/site-data";
-import { EnquiryForm, type EnquiryFormData } from "@/components/products/enquiry/enquiry-form";
+import type { ProductEnquiry } from "@/lib/product";
+import {
+  EnquiryForm,
+  type EnquiryFormData,
+} from "@/components/products/enquiry/enquiry-form";
 import { EnquirySuccessModal } from "@/components/products/enquiry/enquiry-success-modal";
 import type { CountryItem } from "@/components/products/enquiry/destination-country-selector";
 
 export interface EnquiryFormSectionProps {
-  product: Product;
+  product: ProductEnquiry;
 }
 
 const PRIORITY_CODES: Country[] = [
@@ -31,14 +38,18 @@ export function EnquiryFormSection({ product }: EnquiryFormSectionProps) {
   // Build unified country data
   const { allCountries, priorityCountries } = useMemo(() => {
     const rawCountries = getCountries();
+
     const mapped: CountryItem[] = rawCountries.map((code) => {
       const countryName = (en as Record<string, string>)[code] || code;
+
       let callingCode = "";
+
       try {
         callingCode = getCountryCallingCode(code);
       } catch {
         callingCode = "";
       }
+
       return {
         code,
         name: countryName,
@@ -48,6 +59,7 @@ export function EnquiryFormSection({ product }: EnquiryFormSectionProps) {
 
     const priority: CountryItem[] = PRIORITY_CODES.map((code) => {
       const item = mapped.find((c) => c.code === code);
+
       return (
         item || {
           code,
@@ -59,15 +71,21 @@ export function EnquiryFormSection({ product }: EnquiryFormSectionProps) {
 
     const sortedAll = [...mapped].sort((a, b) => a.name.localeCompare(b.name));
 
-    return { allCountries: sortedAll, priorityCountries: priority };
+    return {
+      allCountries: sortedAll,
+      priorityCountries: priority,
+    };
   }, []);
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [submittedData, setSubmittedData] = useState<EnquiryFormData | null>(null);
+  const [submittedData, setSubmittedData] = useState<EnquiryFormData | null>(
+    null,
+  );
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const handleFormSubmit = (data: EnquiryFormData) => {
     setIsSubmitting(true);
+
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmittedData(data);
@@ -85,20 +103,23 @@ export function EnquiryFormSection({ product }: EnquiryFormSectionProps) {
         <h1 className="text-[24px] font-bold tracking-tight text-[#171717] sm:text-[28px]">
           Request Quotation & Spec Sheet
         </h1>
+
         <p className="mt-1 text-[13.5px] text-[#666]">
-          Fill in your shipment requirements below to receive a formal commercial proforma offer.
+          Fill in your shipment requirements below to receive a formal
+          commercial proforma offer.
         </p>
       </div>
 
-      {/* The Enquiry Form is always accessible */}
+      {/* Enquiry Form */}
       <EnquiryForm
         priorityCountries={priorityCountries}
         allCountries={allCountries}
-        isSubmitting={isSubmitting}
-        onSubmit={handleFormSubmit}
+        productName={product.name}
+        categoryName={product.category?.name ?? null}
+        onSuccess={handleFormSubmit}
       />
 
-      {/* Minimal Success Modal overlay with animated checkmark */}
+      {/* Success Modal */}
       {submittedData && (
         <EnquirySuccessModal
           isOpen={isModalOpen}

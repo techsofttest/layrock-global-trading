@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import type { Product } from "@/components/data/site-data";
-import { slugify } from "@/lib/slugify";
+import type { ProductEnquiry } from "@/lib/product";
 
 export interface EnquiryBreadcrumbProps {
-  product: Product;
+  product: ProductEnquiry;
 }
 
 export function EnquiryBreadcrumb({ product }: EnquiryBreadcrumbProps) {
-  const productSlug = slugify(product.name);
+  const productUrl = `/products/${product.category.slug}/${product.slug}`;
 
   return (
     <div className="border-b border-black/[0.06] bg-white px-4 py-3.5 sm:px-6 lg:px-10">
@@ -17,27 +16,38 @@ export function EnquiryBreadcrumb({ product }: EnquiryBreadcrumbProps) {
           <Link href="/" className="transition hover:text-[#ff0000]">
             Home
           </Link>
+
           <span className="text-[#a3a3a3]">/</span>
+
           <Link href="/products" className="transition hover:text-[#ff0000]">
             Products
           </Link>
+
           <span className="text-[#a3a3a3]">/</span>
-          <Link href="/products" className="transition hover:text-[#ff0000]">
-            {product.category}
-          </Link>
-          <span className="text-[#a3a3a3]">/</span>
+
           <Link
-            href={`/products/${productSlug}`}
+            href={`/products/${product.category.slug}`}
+            className="transition hover:text-[#ff0000]"
+          >
+            {product.category.name}
+          </Link>
+
+          <span className="text-[#a3a3a3]">/</span>
+
+          <Link
+            href={productUrl}
             className="font-bold text-[#171717] hover:text-[#ff0000]"
           >
             {product.name}
           </Link>
+
           <span className="text-[#a3a3a3]">/</span>
+
           <span className="font-semibold text-[#ff0000]">Enquiry</span>
         </div>
 
         <Link
-          href={`/products/${productSlug}`}
+          href={productUrl}
           className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#171717] transition hover:text-[#ff0000]"
         >
           <ArrowLeft size={14} />
@@ -47,4 +57,3 @@ export function EnquiryBreadcrumb({ product }: EnquiryBreadcrumbProps) {
     </div>
   );
 }
-

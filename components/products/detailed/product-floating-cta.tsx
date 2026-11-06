@@ -51,12 +51,10 @@ export function ProductFloatingCta({
         {/* Product Image & Title */}
         <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
           <div className="relative size-11 shrink-0 overflow-hidden rounded-xl border border-black/5 bg-[#f6f6f6] sm:size-14">
-            <Image
+            <img
               src={image}
               alt={name}
-              fill
-              sizes="56px"
-              className="object-cover"
+              className="h-full w-full object-cover"
             />
           </div>
 

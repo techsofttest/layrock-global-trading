@@ -22,20 +22,20 @@ export function PageHero({
       <div className="md:hidden">
         {/* Image at natural aspect ratio */}
         <div className="relative aspect-[2048/768] w-full">
-          <Image
+          <img
             src={image}
             alt={imageAlt}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         </div>
 
         {/* Content card below the image */}
         <div className="bg-white px-4 py-6 sm:px-6 sm:py-8">
           {eyebrow && (
-            <Eyebrow textClassName="text-[#171717]" slashClassName="text-[#ff0000]">
+            <Eyebrow
+              textClassName="text-[#171717]"
+              slashClassName="text-[#ff0000]"
+            >
               {eyebrow}
             </Eyebrow>
           )}
@@ -52,13 +52,11 @@ export function PageHero({
 
       {/* ── Desktop: overlay layout (unchanged) ── */}
       <div className="relative hidden h-[70vh] min-h-[460px] md:block">
-        <Image
+        <img
           src={image}
           alt={imageAlt}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
+          className="absolute inset-0 h-full w-full object-cover"
+          fetchPriority="high"
         />
 
         {/* Inner Container aligning with site grid */}
@@ -66,7 +64,10 @@ export function PageHero({
           {/* Left-aligned white box holding header and description */}
           <div className="w-full max-w-xl rounded-2xl bg-white/95 p-6 shadow-2xl backdrop-blur-md sm:p-8 lg:p-10 text-left">
             {eyebrow && (
-              <Eyebrow textClassName="text-[#171717]" slashClassName="text-[#ff0000]">
+              <Eyebrow
+                textClassName="text-[#171717]"
+                slashClassName="text-[#ff0000]"
+              >
                 {eyebrow}
               </Eyebrow>
             )}

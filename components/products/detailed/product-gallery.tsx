@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+} from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 
 export interface ProductGalleryProps {
@@ -52,7 +57,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
       if (!mainEmblaApi) return;
       mainEmblaApi.scrollTo(index);
     },
-    [mainEmblaApi]
+    [mainEmblaApi],
   );
 
   const scrollPrev = useCallback(() => {
@@ -89,7 +94,10 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           )}
 
           {/* Draggable Vertical Embla Carousel for thumbnails */}
-          <div className="h-[360px] xl:h-[420px] w-full overflow-hidden" ref={thumbEmblaRef}>
+          <div
+            className="h-[360px] xl:h-[420px] w-full overflow-hidden"
+            ref={thumbEmblaRef}
+          >
             <div className="flex flex-col gap-2.5">
               {images.map((img, idx) => {
                 const isActive = selectedIndex === idx;
@@ -104,12 +112,10 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                         : "border-black/10 hover:border-black/30 opacity-70 hover:opacity-100"
                     }`}
                   >
-                    <Image
+                    <img
                       src={img}
                       alt={`Thumbnail ${idx + 1}`}
-                      fill
-                      sizes="92px"
-                      className="object-cover pointer-events-none"
+                      className="h-full w-full object-cover pointer-events-none"
                     />
                   </button>
                 );
@@ -135,17 +141,20 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
       <div className="min-w-0 flex-1">
         <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#f4f5f7] sm:aspect-[16/11]">
           {/* Embla Main Viewport */}
-          <div className="size-full overflow-hidden cursor-grab active:cursor-grabbing select-none" ref={mainEmblaRef}>
+          <div
+            className="size-full overflow-hidden cursor-grab active:cursor-grabbing select-none"
+            ref={mainEmblaRef}
+          >
             <div className="flex h-full touch-pan-y">
               {images.map((img, idx) => (
-                <div key={img + idx} className="relative size-full min-w-0 flex-[0_0_100%]">
-                  <Image
+                <div
+                  key={img + idx}
+                  className="relative size-full min-w-0 flex-[0_0_100%]"
+                >
+                  <img
                     src={img}
                     alt={`${productName} - image ${idx + 1}`}
-                    fill
-                    priority={idx === 0}
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-cover pointer-events-none"
+                    className="h-full w-full object-cover pointer-events-none"
                   />
                 </div>
               ))}

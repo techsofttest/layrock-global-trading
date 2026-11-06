@@ -1,68 +1,83 @@
 import { ArrowRight } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
-import type { Product } from "@/components/data/site-data";
-import { EMAIL_ADDRESS, PHONE_NUMBER } from "@/components/data/site-data";
-import { slugify } from "@/lib/slugify";
+import { EMAIL_ADDRESS } from "@/components/data/site-data";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { ProductBreadcrumb } from "@/components/products/detailed/product-breadcrumb";
 import { ProductGallery } from "@/components/products/detailed/product-gallery";
 import { ProductSpecs } from "@/components/products/detailed/product-specs";
-import { ProductFaqAccordion } from "@/components/products/detailed/product-faq-accordion";
 import { ProductFloatingCta } from "@/components/products/detailed/product-floating-cta";
 import { RelatedProductsSection } from "@/components/products/detailed/related-products-section";
-import { getSpecsForCategory } from "@/lib/product-specs-data";
+import type { ProductDetail, RelatedProduct } from "@/lib/product";
 
 export interface ProductDetailViewProps {
-  product: Product;
-  relatedProducts: Product[];
-}
-
-function getFaqsForCategory(product: Product) {
-  return [
-    {
-      q: "What certifications are available for this product?",
-      a: "All shipments are accompanied by Manufacturer Mill Test Certificates (MTC), Certificate of Origin (COO), ISO compliance documentation, and third-party inspection reports (e.g. SGS / Bureau Veritas) upon request.",
-    },
-    {
-      q: "What is the Minimum Order Quantity (MOQ)?",
-      a: "Our standard MOQ starts from 1 FCL (Full Container Load: 20ft or 40ft container). Consolidated mixed-item container shipments can also be arranged depending on your destination port requirements.",
-    },
-    {
-      q: "How are shipping and delivery handled?",
-      a: "We ship internationally on FOB, CIF, and CFR incoterms directly to your designated sea port or terminal. Typical lead times are 15–30 days from order confirmation and LC/TT verification.",
-    },
-  ];
+  product: ProductDetail;
+  relatedProducts: RelatedProduct[];
+  whatsapp: string;
 }
 
 export function ProductDetailView({
   product,
   relatedProducts,
+  whatsapp,
 }: ProductDetailViewProps) {
-  const images = [
-    product.image,
-    `/categories/${product.category}.png`,
-    `/home-hero/${product.category}.png`,
-  ];
+  // ==========================================
+  // DYNAMIC PRODUCT DATA
+  // ==========================================
 
-  const specs = getSpecsForCategory(product);
-  const faqs = getFaqsForCategory(product);
+  const categoryName = product.category.name ?? "Product";
+
+  const images = [
+    ...(product.image ? [product.image] : []),
+    ...product.images,
+  ].filter((image, index, array) => array.indexOf(image) === index);
+
+  const specs = {
+    spec: product.specification.Spec,
+    origin: product.specification.Origin,
+    packing: product.specification.Packing,
+  };
+
+  // ==========================================
+  // ENQUIRY DETAILS
+  // ==========================================
 
   const mailtoSubject = encodeURIComponent(
-    `Export Enquiry: ${product.name} (Ref: ${product.number})`
+    `Export Enquiry: ${product.name} (Ref: ${product.id})`,
   );
+
   const mailtoBody = encodeURIComponent(
-    `Dear Layrock Global Trading Desk,\n\nI would like to initiate an export enquiry for:\n\nProduct: ${product.name}\nCategory: ${product.category}\nItem Ref: ${product.number}\n\nRequired Quantity:\nDestination Port / Country:\nPreferred Incoterm (FOB/CIF/CFR):\n\nCompany Name:\nContact Person:\nPhone Number:\n`
+    `Dear Layrock Global Trading Desk,
+
+I would like to initiate an export enquiry for:
+
+Product: ${product.name}
+Category: ${categoryName}
+Item Ref: ${product.id}
+
+Required Quantity:
+Destination Port / Country:
+Preferred Incoterm (FOB/CIF/CFR):
+
+Company Name:
+Contact Person:
+Phone Number:
+`,
   );
+
   const exportEnquiryHref = `mailto:${EMAIL_ADDRESS}?subject=${mailtoSubject}&body=${mailtoBody}`;
 
-  const cleanPhone = PHONE_NUMBER.replace(/\D/g, "");
+  const cleanPhone = whatsapp.replace(/\D/g, "");
+
   const whatsappText = encodeURIComponent(
-    `Hello Layrock Global Trading LTD, I would like to chat regarding: ${product.name} (Ref: ${product.number}, Category: ${product.category}).`
+    `Hello Layrock Global Trading LTD, I would like to chat regarding: ${product.name} (Ref: ${product.id}, Category: ${categoryName}).`,
   );
-  const whatsappHref = `https://wa.me/${cleanPhone}?text=${whatsappText}`;
-  const productSlug = slugify(product.name);
-  const enquiryPageHref = `/products/${productSlug}/enquiry`;
+
+  const whatsappHref = cleanPhone
+    ? `https://wa.me/${cleanPhone}?text=${whatsappText}`
+    : "#";
+
+  const enquiryPageHref = `/products/${product.category.slug}/${product.slug}/enquiry`;
 
   return (
     <div className="bg-white text-[#171717]">
@@ -73,22 +88,26 @@ export function ProductDetailView({
       <section className="px-4 py-8 sm:px-6 sm:py-12 lg:px-10 lg:py-8">
         <div className="mx-auto max-w-[1440px]">
           <div className="grid gap-10 lg:grid-cols-12 lg:items-start lg:gap-14">
-            {/* Left: Gallery Component (Sticky on desktop view) */}
+            {/* Left: Product Gallery */}
             <div className="lg:sticky lg:top-28 lg:col-span-6">
               <ProductGallery images={images} productName={product.name} />
             </div>
 
-            {/* Right: Product Details, Specs, FAQ & Action */}
+            {/* Right: Product Details */}
             <div className="flex flex-col lg:col-span-6">
-              <Eyebrow>{product.category}</Eyebrow>
+              <Eyebrow>{categoryName}</Eyebrow>
 
               <h1 className="mt-2 text-[24px] font-bold leading-[1.15] tracking-[-0.035em] text-[#171717] sm:text-[28px] lg:text-[36px]">
                 {product.name}
               </h1>
 
-              <p className="mt-4 text-[14.5px] leading-relaxed text-[#4a4a4a] sm:text-[15px]">
-                {product.description}
-              </p>
+              {/* Product Description */}
+              <div
+                className="mt-4 text-[14.5px] leading-relaxed text-[#4a4a4a] sm:text-[15px]"
+                dangerouslySetInnerHTML={{
+                  __html: product.description,
+                }}
+              />
 
               {/* Primary Call to Action Buttons */}
               <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -103,6 +122,7 @@ export function ProductDetailView({
                 >
                   Start Enquiry
                 </Button>
+
                 <Button
                   as="a"
                   href={whatsappHref}
@@ -118,31 +138,28 @@ export function ProductDetailView({
                 </Button>
               </div>
 
-              {/* Technical Specifications Component */}
+              {/* Technical Specifications */}
               <ProductSpecs
                 spec={specs.spec}
                 origin={specs.origin}
                 packing={specs.packing}
               />
-
-              {/* FAQ Accordion Component */}
-              {/* <ProductFaqAccordion faqs={faqs} /> */}
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. Related Products Component */}
+      {/* 3. Related Products */}
       <RelatedProductsSection
-        category={product.category}
+        category={categoryName}
         relatedProducts={relatedProducts}
       />
 
-      {/* 4. Floating CTA Island (Appears on scroll at bottom center) */}
+      {/* 4. Floating CTA */}
       <ProductFloatingCta
         name={product.name}
-        category={product.category}
-        image={product.image}
+        category={categoryName}
+        image={product.image ?? ""}
         enquiryHref={enquiryPageHref}
       />
     </div>

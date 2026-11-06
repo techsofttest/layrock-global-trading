@@ -19,8 +19,6 @@ export interface Product {
   number: string;
 }
 
-
-
 export function getProductBySlug(slug: string): Product | undefined {
   return PRODUCTS.find((p) => slugify(p.name) === slug);
 }
@@ -53,43 +51,37 @@ export const CATEGORIES: Category[] = [
   {
     name: "All products",
     count: "Featured selection",
-    image:
-      "/categories/All products.png",
+    image: "/categories/All products.png",
   },
   {
     name: "Aluminium Products & Extrusions",
     short: "Aluminium products",
     count: "Extrusions & profiles",
-    image:
-      "/categories/Aluminium Products & Extrusions.png",
+    image: "/categories/Aluminium Products & Extrusions.png",
   },
   {
     name: "Non-ferrous metals",
     short: "Non-ferrous metals",
     count: "Alloys & metals",
-    image:
-      "/categories/Metal Products.png",
+    image: "/categories/Metal Products.png",
   },
   {
     name: "Plastics (HDPE & Others)",
     short: "Plastics (HDPE)",
     count: "Industrial polymers",
-    image:
-      "/categories/Plastics (HDPE & Others).png",
+    image: "/categories/Plastics (HDPE & Others).png",
   },
   {
     name: "AAC Blocks",
     short: "AAC blocks",
     count: "Construction materials",
-    image:
-      "/categories/AAC Blocks.png",
+    image: "/categories/AAC Blocks.png",
   },
   {
     name: "Spices",
     short: "Spices",
     count: "Natural ingredients",
-    image:
-      "/categories/Spices.png",
+    image: "/categories/Spices.png",
   },
 ];
 
@@ -603,7 +595,6 @@ export const PRODUCTS: Product[] = [
       "https://images.unsplash.com/photo-1509358271058-acd22cc93898?auto=format&fit=crop&w=1000&q=85",
     number: "50",
   },
-
 ];
 
 export const SERVICES: Service[] = [
@@ -712,8 +703,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     title: "Aluminium Products &\nExtrusions",
     description:
       "Explore premium architectural, commercial and industrial aluminium profiles, extrusions, and sheets.",
-    image:
-      "/home-hero/Aluminium Products & Extrusions.png",
+    image: "/home-hero/Aluminium Products & Extrusions.png",
     label: "Category: Aluminium Products & Extrusions",
   },
   {
@@ -721,8 +711,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     title: "Non-ferrous metals &\nStructural Steel",
     description:
       "Dependable metal, structural steel, rebar, beams, and stainless steel pipe sourcing for industrial infrastructure.",
-    image:
-      "/home-hero/Metal Products & Structural Steel.png",
+    image: "/home-hero/Metal Products & Structural Steel.png",
     label: "Category: Non-ferrous metals",
   },
   {
@@ -730,8 +719,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     title: "Plastics (HDPE &\nOther Polymers)",
     description:
       "High-density polyethylene, blow moulding resins, PP, and versatile polymer materials for packaging and manufacturing.",
-    image:
-      "/home-hero/Plastics HDPE & Other Polymers.png",
+    image: "/home-hero/Plastics HDPE & Other Polymers.png",
     label: "Category: Plastics (HDPE & Others)",
   },
   {
@@ -739,8 +727,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     title: "Autoclaved Aerated\nConcrete (AAC Blocks)",
     description:
       "Eco-friendly, lightweight, and thermal-efficient AAC blocks, panels, and thin-bed mortar for construction projects.",
-    image:
-      "/home-hero/Autoclaved Aerated Concrete AAC Blocks.png",
+    image: "/home-hero/Autoclaved Aerated Concrete AAC Blocks.png",
     label: "Category: AAC Blocks",
   },
   {
@@ -748,9 +735,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     title: "Premium Export\nSpices",
     description:
       "Carefully sourced whole and ground aromatic spices including black pepper, cardamom, turmeric, and dried chillies.",
-    image:
-      "/home-hero/Premium Export Spices.png",
+    image: "/home-hero/Premium Export Spices.png",
     label: "Category: Spices",
   },
 ];
-

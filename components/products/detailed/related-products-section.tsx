@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import type { Product } from "@/components/data/site-data";
+import type { RelatedProduct } from "@/lib/product";
 import { ProductCard } from "@/components/ui/product-card";
 
 export interface RelatedProductsSectionProps {
   category: string;
-  relatedProducts: Product[];
+  relatedProducts: RelatedProduct[];
 }
 
 export function RelatedProductsSection({
@@ -35,11 +35,28 @@ export function RelatedProductsSection({
 
         <div className="grid grid-cols-2 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {relatedProducts.map((relProduct) => (
-            <ProductCard key={relProduct.id} product={relProduct} />
+            <ProductCard
+              key={relProduct.slug}
+              categoryName={relProduct.category_name ?? category}
+              product={{
+                id: 0,
+                cat_id: 0,
+                name: relProduct.name,
+                description: relProduct.description,
+                specification: {
+                  spec: "",
+                  origin: "",
+                  packing: "",
+                },
+                image: relProduct.image ?? "",
+                cat_slug: relProduct.cat_slug,
+                slug: relProduct.slug,
+                imgs: [],
+              }}
+            />
           ))}
         </div>
       </div>
     </section>
   );
 }
-

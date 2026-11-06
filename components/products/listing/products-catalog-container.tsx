@@ -2,85 +2,78 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import type { Category, Product } from "@/components/data/site-data";
+import type { Category } from "@/lib/category";
 import { ProductsCategoryNav } from "@/components/products/listing/products-category-nav";
 import { CategoryProductGroup } from "@/components/products/listing/category-product-group";
 
 export interface ProductsCatalogContainerProps {
   categories: Category[];
-  products: Product[];
   initialCategory?: string;
 }
 
 export function ProductsCatalogContainer({
   categories,
-  products,
   initialCategory,
 }: ProductsCatalogContainerProps) {
   const searchParams = useSearchParams();
   const urlCategory = searchParams.get("category");
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    urlCategory || initialCategory || null
+    urlCategory || initialCategory || null,
   );
 
-  // Synchronize state whenever URL search params change (e.g., clicking Header category link)
+  // Synchronize selected category with URL changes
   useEffect(() => {
-    if (urlCategory) {
-      setSelectedCategory(urlCategory);
-    } else if (!urlCategory && !initialCategory) {
-      setSelectedCategory(null);
-    }
+    setSelectedCategory(urlCategory || initialCategory || null);
   }, [urlCategory, initialCategory]);
 
+  // Filter categories dynamically using API data
   const filteredCategories = useMemo(() => {
     if (!selectedCategory || selectedCategory === "all") {
       return categories;
     }
-    return categories.filter((c) => c.name === selectedCategory);
+
+    return categories.filter(
+      (category) =>
+        category.slug === selectedCategory ||
+        category.name === selectedCategory,
+    );
   }, [selectedCategory, categories]);
 
-  const handleSelectCategory = (categoryName: string) => {
-    if (categoryName === "all") {
-      setSelectedCategory(null);
-      // Clean up URL parameter cleanly without full reload
-      window.history.pushState(null, "", "/products");
-      return;
-    }
-    const nextCategory = selectedCategory === categoryName ? null : categoryName;
+  // Handle category selection
+  const handleSelectCategory = (categorySlug: string) => {
+    const nextCategory =
+      categorySlug === "all" || selectedCategory === categorySlug
+        ? null
+        : categorySlug;
+
     setSelectedCategory(nextCategory);
 
-    if (nextCategory) {
-      window.history.pushState(null, "", `/products?category=${encodeURIComponent(nextCategory)}`);
-    } else {
-      window.history.pushState(null, "", "/products");
-    }
+    const nextUrl = nextCategory
+      ? `/products?category=${encodeURIComponent(nextCategory)}`
+      : "/products";
+
+    window.history.pushState(null, "", nextUrl);
   };
 
   return (
     <>
-      {/* 1. Category Circle Cards Grid at the Top */}
+      {/* Dynamic Category Navigation */}
       <ProductsCategoryNav
         categories={categories}
         selectedCategory={selectedCategory}
         onSelectCategory={handleSelectCategory}
       />
 
-      {/* 2. Filtered Categorized Products List */}
+      {/* Dynamic Category Sections with Nested Products */}
       <div className="space-y-0">
-        {filteredCategories.map((category) => {
-          const categoryProducts = products.filter(
-            (product) => product.category === category.name
-          );
-
-          return (
-            <CategoryProductGroup
-              key={category.name}
-              category={category}
-              products={categoryProducts}
-            />
-          );
-        })}
+        {filteredCategories.map((category) => (
+          <CategoryProductGroup
+            key={category.id}
+            category={category}
+            products={category.products || []}
+          />
+        ))}
       </div>
     </>
   );

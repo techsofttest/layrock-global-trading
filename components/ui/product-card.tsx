@@ -1,64 +1,69 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import type { Product } from "@/components/data/site-data";
-import { slugify } from "@/lib/slugify";
+import type { CategoryProduct } from "@/lib/category";
 
 export interface ProductCardProps {
-  product: Product;
+  product: CategoryProduct;
+  categoryName: string;
   className?: string;
 }
 
-export function ProductCard({ product, className = "" }: ProductCardProps) {
-  const productSlug = slugify(product.name);
-  const productHref = `/products/${productSlug}`;
-  const enquiryHref = `/products/${productSlug}/enquiry`;
+export function ProductCard({
+  product,
+  categoryName,
+  className = "",
+}: ProductCardProps) {
+  const productSlug = product.slug;
+  const productHref = `/products/${product.cat_slug}/${productSlug}`;
+  const enquiryHref = `/products/${product.cat_slug}/${productSlug}/enquiry`;
 
   return (
     <article
       className={`group flex h-full flex-col overflow-hidden rounded-xl border border-black/[0.08] bg-white transition duration-300 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] ${className}`}
     >
-      {/* Image container with locked aspect ratio */}
+      {/* Product Image */}
       <Link
         href={productHref}
         aria-label={`View full specifications for ${product.name}`}
         className="relative block aspect-[4/3] w-full shrink-0 overflow-hidden bg-[#f3f1ee]"
       >
-        <Image
+        <img
           src={product.image}
           alt={product.name}
-          fill
-          sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, (max-width: 1280px) 33vw, 20vw"
-          className="object-cover transition duration-500 group-hover:scale-[1.04]"
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
         />
-        <span className="absolute left-2.5 top-2.5 sm:left-3 sm:top-3 rounded-md bg-white/95 px-2.5 py-0.5 sm:px-3 sm:py-1 text-[11px] sm:text-[12px] font-medium text-[#2d2d2d] shadow-xs max-w-[calc(100%-20px)] truncate">
-          {product.category}
+
+        {/* Category Label */}
+        <span className="absolute left-2.5 top-2.5 sm:left-3 sm:top-3 max-w-[calc(100%-20px)] truncate rounded-md bg-white/95 px-2.5 py-0.5 text-[11px] font-medium text-[#2d2d2d] shadow-xs sm:px-3 sm:py-1 sm:text-[12px]">
+          {categoryName}
         </span>
       </Link>
 
-      {/* Content body */}
+      {/* Product Content */}
       <div className="flex flex-1 flex-col p-3 sm:p-4">
         <Link href={productHref} className="block">
-          <h3 className="text-[13.5px] sm:text-[15px] font-bold leading-snug tracking-[-0.02em] text-[#171717] line-clamp-2 transition hover:text-[#ff0000]">
+          <h3 className="line-clamp-2 text-[13.5px] font-bold leading-snug tracking-[-0.02em] text-[#171717] transition hover:text-[#ff0000] sm:text-[15px]">
             {product.name}
           </h3>
         </Link>
-        <p className="mt-1.5 flex-1 text-[12px] sm:text-[13px] leading-relaxed sm:leading-5 text-[#4a4a4a] line-clamp-2 sm:line-clamp-3">
-          {product.description}
+
+        <p className="mt-1.5 flex-1 line-clamp-2 text-[12px] leading-relaxed text-[#4a4a4a] sm:line-clamp-3 sm:text-[13px] sm:leading-5">
+          {product.description?.replace(/<[^>]*>/g, "").trim()}
         </p>
 
-        {/* Action buttons */}
-        <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-1.5 pt-1">
+        {/* Action Buttons */}
+        <div className="mt-3 grid grid-cols-2 gap-1.5 pt-1 sm:mt-4">
           <Link
             href={productHref}
-            className="inline-flex h-8 sm:h-9 items-center justify-center gap-1 rounded-lg border border-black/15 px-1.5 sm:px-2 text-[11px] sm:text-[12px] font-medium text-[#171717] transition hover:border-[#171717] hover:bg-[#171717] hover:text-white whitespace-nowrap"
+            className="inline-flex h-8 items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-black/15 px-1.5 text-[11px] font-medium text-[#171717] transition hover:border-[#171717] hover:bg-[#171717] hover:text-white sm:h-9 sm:px-2 sm:text-[12px]"
           >
             <span>Details</span>
             <ArrowUpRight size={12} className="shrink-0 sm:size-[13px]" />
           </Link>
+
           <Link
             href={enquiryHref}
-            className="inline-flex h-8 sm:h-9 items-center justify-center gap-1 rounded-lg bg-[#ff0000] px-1.5 sm:px-2 text-[11px] sm:text-[12px] font-medium text-white transition hover:bg-[#d90000] whitespace-nowrap"
+            className="inline-flex h-8 items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-[#ff0000] px-1.5 text-[11px] font-medium text-white transition hover:bg-[#d90000] sm:h-9 sm:px-2 sm:text-[12px]"
           >
             <span>Enquire</span>
             <ArrowRight size={12} className="shrink-0 sm:size-[13px]" />

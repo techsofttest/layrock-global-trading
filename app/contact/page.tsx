@@ -1,30 +1,69 @@
+import type { Metadata } from "next";
+
 import { PageHero } from "@/components/ui/page-hero";
 import { ContactDetails } from "@/components/contact/contact-details";
 import { ContactFormSection } from "@/components/contact/contact-form-section";
 
-export const metadata = {
-  title: "Contact Us | Layrock Global Trading LTD",
-  description:
-    "Get in touch with Layrock Global Trading LTD for sourcing inquiries, shipping quotes, and international trade assistance.",
-};
+import { getContact } from "@/lib/contact";
+import { getCategories } from "@/lib/category";
 
-export default function ContactPage() {
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const contactData = await getContact();
+
+  const title =
+    contactData?.seo?.meta_title || "Contact Us | Layrock Global Trading LTD";
+
+  const description =
+    contactData?.seo?.meta_description ||
+    "Get in touch with Layrock Global Trading LTD for sourcing inquiries, shipping quotes, and international trade assistance.";
+
+  return {
+    title,
+    description,
+    keywords: contactData?.seo?.meta_keywords || undefined,
+
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      siteName: "Layrock Global Trading LTD",
+    },
+
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
+
+export default async function ContactPage() {
+  const [contactData, categories] = await Promise.all([
+    getContact(),
+    getCategories(),
+  ]);
+
+  const banner = contactData?.bannerData;
+  const contact = contactData?.contact;
+
   return (
     <main className="min-h-screen overflow-x-clip bg-white text-[#171717]">
-      {/* Hero section */}
       <PageHero
-        eyebrow="GET IN TOUCH"
-        title="Contact Us"
-        description="Let's discuss your sourcing needs. Reach out to our global trade desk with your specifications, volume requirements, or destination incoterm inquiries."
-        image="/banner/b8.png"
+        eyebrow={banner?.subtitle || "GET IN TOUCH"}
+        title={banner?.title || "Contact Us"}
+        description={
+          banner?.description ||
+          "Let's discuss your sourcing needs. Reach out to our global trade desk."
+        }
+        image={banner?.image || "/banner/b8.png"}
         imageAlt="Layrock Global Trading - Contact Us"
       />
 
-      {/* Section 1: Contact Details with right-aligned image */}
-      <ContactDetails />
+      <ContactDetails contact={contact} />
 
-      {/* Section 2: Contact Form inside full-width banner with bg image, aligned to right edge */}
-      <ContactFormSection />
+      <ContactFormSection categories={categories || []} />
     </main>
   );
 }
